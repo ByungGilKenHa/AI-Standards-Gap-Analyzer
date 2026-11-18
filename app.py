@@ -1,3 +1,4 @@
+
 """Free, local, deterministic ISO text difference tool."""
 import hashlib
 import io
@@ -48,7 +49,7 @@ def workbook(summary, evidence, rows, old_name, new_name, old_hash, new_hash, re
             {'Field': 'Previous PDF SHA-256', 'Value': old_hash}, {'Field': 'Revised PDF SHA-256', 'Value': new_hash},
             {'Field': 'Limitations', 'Value': 'Deterministic text evidence plus optional UNVERIFIED local AI drafts. AI evidence quote is verified verbatim, but interpretation is NOT verified. Check original PDFs, numbering, amendments and relocation.'},
             {'Field': 'Reference material', 'Value': 'Optional user-supplied DOCX matrix; its educational interpretations are unverified and matched provisionally by clause number.'},
-            {'Field': 'Privacy', 'Value': 'Comparison is local. Optional learning sends selected extracted clause text only to local Ollama at 127.0.0.1.'},
+            {'Field': 'Privacy', 'Value': 'Comparison runs on the host where Streamlit is deployed. Uploaded PDFs are processed by that host. Optional Ollama analysis requires an accessible configured model endpoint.'},
             {'Field': 'Review notes', 'Value': 'User-entered notes; not AI-generated or automatically verified. Review state is kept in this browser session only.'},
         ])
     }
@@ -153,7 +154,10 @@ if 'results' in st.session_state:
     with a:
         st.download_button('Download Excel Report', workbook(summary,evidence,rows,old_name,new_name,old_hash,new_hash,reviews,reference,analyses,failed), file_name='AI_Standards_Gap_Analyzer_Report.xlsx',mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',use_container_width=True)
     with b:
-        st.download_button('Download Word Report',make_learning_docx(analyses,old_name,new_name,old_hash,new_hash,total_clauses=len(rows),eligible_clauses=len(eligible),complete=(completed==len(eligible) and bool(eligible))),file_name='AI_Standards_Gap_Analyzer_Practical_Change_Report.docx',mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document',disabled=not bool(analyses),use_container_width=True)
+        st.download_button('Download Word Report', make_automatic_docx(rows, evidence, reviews, old_name, new_name, old_hash, new_hash, reference), file_name='AI_Standards_Gap_Analyzer_Automatic_Change_Matrix.docx', mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document', use_container_width=True)
+    if analyses:
+        st.download_button('Download Optional AI Learning Draft', make_learning_docx(analyses, old_name, new_name, old_hash, new_hash, total_clauses=len(rows), eligible_clauses=len(eligible), complete=(completed == len(eligible) and bool(eligible))), file_name='AI_Standards_Gap_Analyzer_AI_Learning_Draft.docx', mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document', use_container_width=True)
+    st.caption('The Word Report is a deterministic comparison draft, available without Ollama. Optional AI learning is a separate, unverified draft.')
     with st.expander('Requirement Traceability Map'):
         st.caption('Each clause links source pages and text to provisional AI explanations. This is NOT expert-verified.')
         trace = trace_rows(rows, analyses, failed)
